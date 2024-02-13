@@ -49,6 +49,9 @@ Base koneksi ke aktuator dan sensor dengan MySensors
 // #define MY_DEFAULT_RX_LED_PIN  6  // Receive led pin
 // #define MY_DEFAULT_TX_LED_PIN  5  // the PCB, on board LED
 
+#define SLEEP_PIN GPIO_NUM_15
+#define USE_OLED
+
 //#include "define.h"
 #include <MySensors.h>
 #include <mqttHandle.h>
@@ -60,11 +63,14 @@ Base koneksi ke aktuator dan sensor dengan MySensors
 #include <biopestHandle.h>
 #include <otaHandle.h>
 #include <bleHandle.h>
-
+#ifdef USE_OLED
+#include <oledHandle.h>
+#else
 #include <lcdHandle.h>
+#endif
 #include <keypadHandle.h>
 
-#define SLEEP_PIN GPIO_NUM_15
+
 
 unsigned long sleep_timer = millis();
 int sleep_bounc =0;
@@ -93,7 +99,12 @@ void before()
     esp_sleep_enable_ext0_wakeup(SLEEP_PIN,1); //1 = High, 0 = Low
     time_init();
     mqtt_init();
+    
+    #ifdef USE_OLED
+    oled_init();
+    #else
     lcd_init();
+    #endif
     keypad_init();
     
    

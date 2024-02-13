@@ -12,8 +12,6 @@ void lcdUpdate(){
 
 }
 
-
-
 void lcd_init(){
     lcd.begin();
     lcd.backlight();

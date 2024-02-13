@@ -6,8 +6,10 @@
 #include <biopestHandle.h>
 #include <mqttHandle.h>
 #include <mySensorsHandle.h>
+#include <oledHandle.h>
+#include <SSD1306Wire.h>
 
-
+#define USE_OLED
 
 #define STANBY 0
 #define SIRAM 1
@@ -66,8 +68,8 @@ uint8_t keyCount = 0;
 bool keyTes = false;
 bool keySts = false;
 String keyNumber = "";
-extern String line1 ;
-extern String line2 ;
+extern String line1;
+extern String line2;
 uint8_t jadwalRawTemp[19];
 String jadwalTemp = "0";
 String jadwalTempAll = "";
@@ -530,7 +532,6 @@ void editJadwal(uint8_t jenisJadwal, uint8_t nomerJadwal, char key)
                             jadwalTempAll += getValue(jadwalSiram, ';', 4);
                             jadwalTempAll += ";";
 
-
                             line1 += "2 Siram?";
                         }
                         else if (nomerJadwal == 3)
@@ -557,7 +558,7 @@ void editJadwal(uint8_t jenisJadwal, uint8_t nomerJadwal, char key)
                             jadwalTempAll += getValue(jadwalSiram, ';', 2);
                             jadwalTempAll += ";";
                             jadwalTempAll = jadwalTemp;
-                            jadwalTempAll += ";";                            
+                            jadwalTempAll += ";";
                             jadwalTempAll += getValue(jadwalSiram, ';', 4);
                             jadwalTempAll += ";";
 
@@ -574,12 +575,11 @@ void editJadwal(uint8_t jenisJadwal, uint8_t nomerJadwal, char key)
                             jadwalTempAll += getValue(jadwalSiram, ';', 3);
                             jadwalTempAll += ";";
                             jadwalTempAll = jadwalTemp;
-                            jadwalTempAll += ";";                            
-                            
+                            jadwalTempAll += ";";
 
                             line1 += "5 Siram?";
                         }
-                        
+
                         // Serial.print("jadwal siram def: ");
                         // Serial.println(jadwalSiram);
                         //.print("jadwal siram tem: ");
@@ -1100,7 +1100,7 @@ void editJadwal(uint8_t jenisJadwal, uint8_t nomerJadwal, char key)
                             jadwalTempAll += getValue(jadwalPestisida, ';', 2);
                             jadwalTempAll += ";";
                             jadwalTempAll = jadwalTemp;
-                            jadwalTempAll += ";";                            
+                            jadwalTempAll += ";";
                             jadwalTempAll += getValue(jadwalPestisida, ';', 4);
                             jadwalTempAll += ";";
 
@@ -1117,10 +1117,9 @@ void editJadwal(uint8_t jenisJadwal, uint8_t nomerJadwal, char key)
                             jadwalTempAll += getValue(jadwalPestisida, ';', 3);
                             jadwalTempAll += ";";
                             jadwalTempAll = jadwalTemp;
-                            jadwalTempAll += ";"; 
+                            jadwalTempAll += ";";
                             line1 += "5 Pest? ";
                         }
-                        
                     }
                     else if (jenisJadwal == 3)
                     {
@@ -1182,7 +1181,7 @@ void editJadwal(uint8_t jenisJadwal, uint8_t nomerJadwal, char key)
                             jadwalTempAll += getValue(jadwalBiopest, ';', 2);
                             jadwalTempAll += ";";
                             jadwalTempAll = jadwalTemp;
-                            jadwalTempAll += ";";                            
+                            jadwalTempAll += ";";
                             jadwalTempAll += getValue(jadwalBiopest, ';', 4);
                             jadwalTempAll += ";";
 
@@ -1200,7 +1199,6 @@ void editJadwal(uint8_t jenisJadwal, uint8_t nomerJadwal, char key)
                             jadwalTempAll += ";";
                             jadwalTempAll = jadwalTemp;
                             jadwalTempAll += ";";
-                            
 
                             line1 += "5 Biops? ";
                         }
@@ -1223,19 +1221,71 @@ void editJadwal(uint8_t jenisJadwal, uint8_t nomerJadwal, char key)
 void cekKey(char key)
 {
     keyMode = getRunMode();
-
+    //           "012345678901234567890"
+    String ftr = "*(start)       #(stop)";
+    String txt1 = "";
     switch (key)
     {
+
     case 'A':
         if (keyMode == STANBY)
         {
-            //            "0123456789012345"
 
+#ifdef USE_OLED
+            txt1 = "Lahan ";
+            if (selenoidLahan1_status)
+            {
+                txt1 += "1";
+            }
+            else
+            {
+                txt1 += " ";
+            }
+
+            if (selenoidLahan2_status)
+            {
+                txt1 += "2";
+            }
+            else
+            {
+                txt1 += " ";
+            }
+
+            if (selenoidLahan3_status)
+            {
+                txt1 += "3";
+            }
+            else
+            {
+                txt1 += " ";
+            }
+
+            if (selenoidLahan4_status)
+            {
+                txt1 += "4 > ";
+            }
+            else
+            {
+                txt1 += "  > ";
+            }
+            if (getDurasiSiram() < 10)
+            {
+                txt1 += " ";
+            }
+
+            txt1 += String(getDurasiSiram());
+            txt1 += " menit";
+
+            oled_update("   Penyiraman  ", txt1, "00:00  0Ltr", ftr);
+
+#else
             String txt1 = "Siram 1234 > ";
             txt1 += String(getDurasiSiram());
             lcd_clear();
             lcd_print(0, 0, txt1);
             lcd_print(0, 1, "*(start) #(stop)");
+#endif
+
             setRunMode(KEY_SET_SIRAM);
             keyMode = KEY_SET_SIRAM;
             menuCount = 0;
@@ -1253,9 +1303,19 @@ void cekKey(char key)
     case 'B':
         if (keyMode == STANBY)
         {
-            //               "0123456789012345"
+//               "0123456789012345"
+#ifdef USE_OLED
+            //     "012345678901234567890"
+            txt1 = "Lahan 1234 ";
+            txt1 += String(getDosisPestisida());
+            txt1 += "mL  ";
+            txt1 += String(getDosisAirPestisida());
+            txt1 += "Ltr ";
+            oled_update("   Pestisida  ", txt1, "     ", ftr);
+#else
             lcd_print(0, 0, " Mode Pestisida ");
             lcd_print(0, 1, "*(start) #(stop)");
+#endif
             setRunMode(KEY_SET_PESTISIDA);
             keyMode = KEY_SET_PESTISIDA;
 
@@ -1272,9 +1332,19 @@ void cekKey(char key)
     case 'C':
         if (keyMode == STANBY)
         {
-            //            "0123456789012345"
+#ifdef USE_OLED
+            //     "012345678901234567890"
+            txt1 = "Lahan 1234 ";
+            txt1 += String(getDosisBiopest());
+            txt1 += "mL  ";
+            txt1 += String(getDosisAirBiopest());
+            txt1 += "Ltr ";
+            //          "012345678901234567890"
+            oled_update("  Biopestisida  ", txt1, "     ", ftr);
+#else
             lcd_print(0, 0, "  Mode Biopest  ");
             lcd_print(0, 1, "*(start) #(stop)");
+#endif
             setRunMode(KEY_SET_BIOPEST);
             keyMode = KEY_SET_BIOPEST;
             menuCount = 0;
@@ -1289,6 +1359,24 @@ void cekKey(char key)
             {
                 uint8_t dur = getDurasiSiram();
                 //      "0123456789012345"
+
+#ifdef USE_OLED
+
+                line1 = "Lahan 1 2 3 4 ";
+                line2 = "Durasi: ";
+                line2 += String(getDurasiSiram());
+                line2 += " menit";
+                oled_clear();
+                oled_header("    Penyiraman  ");
+                oled_font(ArialMT_Plain_16);
+                // oled_print(0,24,line1);
+                oled_print(0, 18, line1);
+                oled_print(0, 36, line2);
+                // oled_kotak(0,15,32,18);
+                oled_kotak(48, 17, 14, 18);
+                oled_update_display();
+
+#else
                 line1 = "Siram lahan 1234";
                 line2 = "Durasi ";
                 if (dur < 10)
@@ -1297,10 +1385,12 @@ void cekKey(char key)
                 }
                 line2 += dur;
                 line2 += " mnt";
+
                 lcd_clear();
                 lcd_print(0, 0, line1);
                 lcd_print(0, 1, line2);
                 lcd_cursorBlink(12, 0);
+#endif
                 menuCount = 1;
                 subMenuCount = 0;
                 keyCount = 0;
@@ -1780,7 +1870,11 @@ void cekKey(char key)
             else
             {
                 setRunMode(STANBY);
+#ifdef USE_OLED
+                oled_stanby_mode("---", "00:00");
+#else
                 lcd_stanby();
+#endif
             }
         }
         else if (keyMode == KEY_SET_PESTISIDA)
@@ -1916,7 +2010,11 @@ void cekKey(char key)
             else
             {
                 setRunMode(STANBY);
+#ifdef USE_OLED
+                oled_stanby_mode("---", "00:00");
+#else
                 lcd_stanby();
+#endif
             }
         }
         else if (keyMode == KEY_SET_BIOPEST)
@@ -2051,7 +2149,11 @@ void cekKey(char key)
             else
             {
                 setRunMode(STANBY);
+#ifdef USE_OLED
+                oled_stanby_mode("---", "00:00");
+#else
                 lcd_stanby();
+#endif
             }
         }
         else if (keyMode == SIRAM)
@@ -2243,7 +2345,7 @@ void cekKey(char key)
                         }
                         else if (key == '0')
                         {
-                            selenoidLahan4_status = true;
+                            selenoidLahan4_status = false;
                             lcd_print(15, 0, "-");
                             keySts = true;
                         }
@@ -2251,6 +2353,43 @@ void cekKey(char key)
                     }
                     if (keySts)
                     {
+                        // line1 = "Lahan 1 2 3 4 ";
+                        line1 = "Lahan ";
+                        if (selenoidLahan1_status)
+                        {
+                            line1 += "1 ";
+                        }
+                        else
+                        {
+                            line1 += "  ";
+                        }
+
+                        if (selenoidLahan2_status)
+                        {
+                            line1 += "2 ";
+                        }
+                        else
+                        {
+                            line1 += "  ";
+                        }
+
+                        if (selenoidLahan3_status)
+                        {
+                            line1 += "3 ";
+                        }
+                        else
+                        {
+                            line1 += "  ";
+                        }
+
+                        if (selenoidLahan4_status)
+                        {
+                            line1 += "4 ";
+                        }
+                        else
+                        {
+                            line1 += "  ";
+                        }
 
                         if (++keyCount > 3)
                         {
@@ -2258,10 +2397,57 @@ void cekKey(char key)
                             keyCount = 0;
                             keyNumber = "";
                             lcd_cursorBlink(7, 1);
+
+                            line2 = "Durasi: ";
+                            if (getDurasiSiram() < 10)
+                            {
+                                line2 += " ";
+                            }
+                            line2 += String(getDurasiSiram());
+                            line2 += " menit";
+                            oled_clear();
+                            oled_header("    Penyiraman  ");
+                            oled_font(ArialMT_Plain_16);
+                            // oled_print(0,24,line1);
+                            oled_print(0, 18, line1);
+                            oled_print(0, 36, line2);
+                            oled_kotak(50, 35, 64, 18);
+                            oled_update_display();
                         }
                         else
                         {
                             lcd_cursorBlink((12 + keyCount), 0);
+                            line2 = "Durasi: ";
+                            if (getDurasiSiram() < 10)
+                            {
+                                line2 += " ";
+                            }
+                            line2 += String(getDurasiSiram());
+                            line2 += " menit";
+                            oled_clear();
+                            oled_header("    Penyiraman  ");
+                            oled_font(ArialMT_Plain_16);
+                            // oled_print(0,24,line1);
+                            oled_print(0, 18, line1);
+                            oled_print(0, 36, line2);
+                            // oled_kotak(0,15,32,18);
+                            if (keyCount == 0)
+                            {
+                                oled_kotak(48, 17, 14, 18);
+                            }
+                            else if (keyCount == 1)
+                            {
+                                oled_kotak(62, 17, 14, 18);
+                            }
+                            else if (keyCount == 2)
+                            {
+                                oled_kotak(76, 17, 14, 18);
+                            }
+                            else if (keyCount == 3)
+                            {
+                                oled_kotak(90, 17, 14, 18);
+                            }
+                            oled_update_display();
                         }
                     }
                 }
@@ -2272,6 +2458,18 @@ void cekKey(char key)
                     lcd_print(7, 1, keyNumber);
                     keyCount++;
                     lcd_cursorBlink((keyCount + 7), 1);
+
+                    line2 = "Durasi: ";
+                    line2 += keyNumber;
+                    line2 += " menit";
+                    oled_clear();
+                    oled_header("    Penyiraman  ");
+                    oled_font(ArialMT_Plain_16);
+                    // oled_print(0,24,line1);
+                    oled_print(0, 18, line1);
+                    oled_print(0, 36, line2);
+                    oled_kotak(50, 35, 64, 18);
+                    oled_update_display();
                     // Serial.print(keyNumber);
                     if (keyNumber.length() == 2)
                     {
@@ -2283,45 +2481,53 @@ void cekKey(char key)
                             menuCount = 0;
                             keyCount = 0;
 
-                            line1 = "Siram ";
+                            txt1 = "Lahan ";
                             if (selenoidLahan1_status)
                             {
-                                line1 += "1";
+                                txt1 += "1";
                             }
                             else
                             {
-                                line1 += "-";
+                                txt1 += " ";
                             }
+
                             if (selenoidLahan2_status)
                             {
-                                line1 += "2";
+                                txt1 += "2";
                             }
                             else
                             {
-                                line1 += "-";
+                                txt1 += " ";
                             }
+
                             if (selenoidLahan3_status)
                             {
-                                line1 += "3";
+                                txt1 += "3";
                             }
                             else
                             {
-                                line1 += "-";
+                                txt1 += " ";
                             }
+
                             if (selenoidLahan4_status)
                             {
-                                line1 += "4";
+                                txt1 += "4 > ";
                             }
                             else
                             {
-                                line1 += "-";
+                                txt1 += "  > ";
                             }
-                            line1 += " > ";
-                            line1 += String(getDurasiSiram());
-                            lcd_clear();
-                            lcd_print(0, 0, line1);
-                            lcd_print(0, 1, "*(start) #(stop)");
-                            //setRunMode(SIRAM);
+                            if (getDurasiSiram() < 10)
+                            {
+                                txt1 += " ";
+                            }
+
+                            txt1 += String(getDurasiSiram());
+                            txt1 += " menit";
+
+                            oled_update("   Penyiraman  ", txt1, "00:00  0Ltr", ftr);
+
+                            // setRunMode(SIRAM);
                             menuCount = 0;
                             keyMode = KEY_SET_SIRAM;
                         }

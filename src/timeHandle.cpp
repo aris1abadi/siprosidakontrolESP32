@@ -19,7 +19,11 @@
 
 #include <mqttHandle.h>
 #include <lcdHandle.h>
+#include <oledHandle.h>
 #include <eepromHandle.h>
+#include "SSD1306Wire.h"  
+
+#define USE_OLED
 
 #ifndef USE_INTERNAL_RTC
 RTC_DS3231 rtc;
@@ -49,6 +53,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 25200, 60000);
 
 char daysOfTheWeek[7][12] = {"Minggu", "Senin", "Selasa", "Rabo", "Kamis", "Jumat", "Sabtu"};
+char bulan[12][12] = {"Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","Nopember","Desember"};
 void ntp_init()
 {
   timeClient.begin();
@@ -120,7 +125,12 @@ void displayWaktu()
 
 #ifdef USE_INTERNAL_RTC
   timeDisplay1 = daysOfTheWeek[rtc.getDayofWeek()];
-  timeDisplay1 += ",  ";
+  timeDisplay1 += ",";
+  timeDisplay1 += rtc.getDay();
+  timeDisplay1 += " ";
+  timeDisplay1 += bulan[rtc.getMonth()];
+  timeDisplay1 += " ";
+  timeDisplay1 += rtc.getYear();
 
   if (rtc.getHour(true) < 10)
   {
@@ -142,7 +152,12 @@ void displayWaktu()
   timeDisplay2 += rtc.getSecond();
 #else
   timeDisplay1 = daysOfTheWeek[now.dayOfTheWeek()];
-  timeDisplay1 += ",  ";
+  timeDisplay1 += ",";
+  timeDisplay1 += now.getDay();
+  timeDisplay1 += "-";
+  timeDisplay1 += now.getMonth();
+  timeDisplay1 += "-";
+  timeDisplay1 += now.getYear();
 
   if (now.hour() < 10)
   {
@@ -165,8 +180,13 @@ void displayWaktu()
 #endif
 
   // wk += ",    ";
+  #ifdef USE_OLED
+  oled_stanby_mode(timeDisplay1,timeDisplay2);
+  #else
   lcd_print(0, 1, timeDisplay1);
   lcd_print(8, 1, timeDisplay2);
+  #endif
+  
 }
 void time_update()
 {
@@ -206,38 +226,6 @@ void time_update()
         ntp_sync();
       }
     }
-    /*
-      timeNow = rtc.getYear();
-      timeNow += "-";
-      if ((rtc.getMonth() + 1) < 10)
-        timeNow += "0";
-      timeNow += (rtc.getMonth() + 1);
-      timeNow += "-";
-      if (rtc.getDay() < 10)
-        timeNow += "0";
-      timeNow += rtc.getDay();
-      timeNow += " ";
-      if (rtc.getHour() < 10)
-      {
-        timeNow += "0";
-      }
-      timeNow += rtc.getHour();
-      timeNow += ":";
-      if (rtc.getMinute() < 10)
-      {
-        timeNow += "0";
-      }
-      timeNow += rtc.getMinute();
-      timeNow += ":";
-      if (rtc.getSecond() < 10)
-      {
-        timeNow += "0";
-      }
-      timeNow += rtc.getSecond();
-
-      Serial.println(timeNow);
-      // kirimKeApp("kontrol", 0, "time", timeNow);
-  */
     Serial.println(rtc.getDateTime(true));
     lastMenit = rtc.getMinute(); // cek setiap menit saja
     jamNow = rtc.getHour();
@@ -306,7 +294,6 @@ void time_update()
   }
 
 #endif
-
   // timeClient.update();
   if (getRunMode() == 0)
   { // mode stanby
