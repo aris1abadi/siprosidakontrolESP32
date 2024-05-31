@@ -22,12 +22,15 @@ format pesan
 #define USE_PESTISIDA 0
 #define USE_BIOPEST 180
 
+
 #include <Arduino.h>
 // #include <ESP8266WiFi.h>
 #include <WiFi.h>
-// #include <ESPAsyncTCP.h>
-// #include <ESPAsyncWebServer.h>
-// #include <ElegantOTA.h>
+#ifdef USE_LOCAL_OTA
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <ElegantOTA.h>
+#endif
 #include <Ticker.h>
 #include <AsyncMqttClient.h>
 #include <mqttHandle.h>
@@ -51,23 +54,28 @@ extern String pass;
 extern String mqtt_host;
 extern int mqtt_port;
 
-// AsyncWebServer server(80);
+
 //  Set your Static IP address
-// IPAddress local_IP(192, 168, 0, 51);
+#ifdef USE_LOCAL_OTA
+AsyncWebServer server(80);
+IPAddress local_IP(192, 168, 0, 51);
 //  Set your Gateway IP address
-// IPAddress gateway(192, 168, 0, 1);
-// IPAddress subnet(255, 255, 255, 0);
+IPAddress gateway(192, 168, 0, 1);
+IPAddress subnet(255, 255, 255, 0);
+
+IPAddress primaryDNS(8, 8, 8, 8);   // optional
+IPAddress secondaryDNS(8, 8, 4, 4); // optional
+#endif
 
 AsyncMqttClient mqttClient;
 Ticker mqttReconnectTimer;
 Ticker wifiReconnectTimer;
 Ticker rebootTimer;
 
-//WiFiEventHandler wifiConnectHandler;
-//WiFiEventHandler wifiDisconnectHandler;
+// WiFiEventHandler wifiConnectHandler;
+// WiFiEventHandler wifiDisconnectHandler;
 
-
-// AsyncWebServer server(80);
+// 
 
 // variable esternal
 
@@ -119,8 +127,10 @@ extern bool selenoidLahan2_status;
 extern bool selenoidLahan3_status;
 extern bool selenoidLahan4_status;
 
+#ifdef USE_LOCAL_OTA
 unsigned long ota_progress_millis = 0;
-/*
+
+
 void onOTAStart() {
   // Log when OTA has started
   Serial.println("OTA update started!");
@@ -145,6 +155,7 @@ void onOTAEnd(bool success) {
   // <Add your own code here>
 }
 
+
 void localOta_init(){
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Hai,saya SIPROSIDA");
@@ -160,7 +171,8 @@ void localOta_init(){
   Serial.print("OTA pada IP: ");
   Serial.println(WiFi.localIP());
 }
-*/
+#endif
+
 void sendHeatBeat()
 {
   ++heartBeat_val;
@@ -176,6 +188,9 @@ void mqtt_loop()
       sendHeatBeat();
     }
   }
+  #ifdef USE_LOCAL_OTA
+  ElegantOTA.loop();
+  #endif
 }
 
 String getStatusNow()
@@ -353,10 +368,9 @@ void cekMqttMsg(String mqTopic, String mqMsg)
     }
     else if (mqCmd == "login")
     {
-      //format login password,username,clientID,
-      
+      // format login password,username,clientID,
 
-      //format respon status loginstatus(0/1),-/username,clientID(jika login dari perangkat baru),
+      // format respon status loginstatus(0/1),-/username,clientID(jika login dari perangkat baru),
       Serial.print("login password: ");
       Serial.println(mqMsg);
     }
@@ -768,7 +782,8 @@ void cekMqttMsg(String mqTopic, String mqMsg)
       simpanKalibrasi_airpestisida(mqMsg.toInt());
       kirimKeApp("pestisida", 0, "kalibrasiAir", mqMsg);
     }
-    else if(mqCmd == "getKalibrasi"){
+    else if (mqCmd == "getKalibrasi")
+    {
       String kal = String(getKalibrasi_pestisida());
       kal += ",";
       kal += String(getKalibrasi_air_pestisida());
@@ -854,7 +869,8 @@ void cekMqttMsg(String mqTopic, String mqMsg)
       simpanKalibrasi_airbiopest(mqMsg.toInt());
       kirimKeApp("biopest", 0, "kalibrasiAir", mqMsg);
     }
-    else if(mqCmd == "getKalibrasi"){
+    else if (mqCmd == "getKalibrasi")
+    {
       String kal = String(getKalibrasi_biopest());
       kal += ",";
       kal += String(getKalibrasi_air_biopest());
@@ -874,6 +890,13 @@ void connectToWifi()
   // if (!WiFi.config(local_IP, gateway, subnet)) {
   //   Serial.println("STA Failed to configure");
   // }
+  // Configures static IP address
+  #ifdef USE_LOCAL_OTA
+  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS))
+  {
+    Serial.println("STA Failed to configure");
+  }
+  #endif
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), pass.c_str());
@@ -923,8 +946,10 @@ void onMqttConnect(bool sessionPresent)
   mqttClient.publish(subTxt.c_str(), 0, true, k_id.c_str());
   Serial.println("Publishing at QoS 0");
   // ota online init
-  //ota_init();
-  // localOta_init();
+  ota_init();
+  #ifdef USE_LOCAL_OTA
+  localOta_init();
+  #endif
   ntp_init();
   ntp_sync();
 }

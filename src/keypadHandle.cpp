@@ -9,7 +9,7 @@
 #include <oledHandle.h>
 #include <SSD1306Wire.h>
 
-#define USE_OLED
+//#define USE_OLED
 
 #define STANBY 0
 #define SIRAM 1
@@ -2405,6 +2405,7 @@ void cekKey(char key)
                             }
                             line2 += String(getDurasiSiram());
                             line2 += " menit";
+                            #ifdef USE_OLED
                             oled_clear();
                             oled_header("    Penyiraman  ");
                             oled_font(ArialMT_Plain_16);
@@ -2413,6 +2414,7 @@ void cekKey(char key)
                             oled_print(0, 36, line2);
                             oled_kotak(50, 35, 64, 18);
                             oled_update_display();
+                            #endif
                         }
                         else
                         {
@@ -2424,12 +2426,14 @@ void cekKey(char key)
                             }
                             line2 += String(getDurasiSiram());
                             line2 += " menit";
+                            #ifdef USE_OLED
                             oled_clear();
                             oled_header("    Penyiraman  ");
                             oled_font(ArialMT_Plain_16);
                             // oled_print(0,24,line1);
                             oled_print(0, 18, line1);
                             oled_print(0, 36, line2);
+                            
                             // oled_kotak(0,15,32,18);
                             if (keyCount == 0)
                             {
@@ -2448,6 +2452,7 @@ void cekKey(char key)
                                 oled_kotak(90, 17, 14, 18);
                             }
                             oled_update_display();
+                            #endif
                         }
                     }
                 }
@@ -2462,6 +2467,7 @@ void cekKey(char key)
                     line2 = "Durasi: ";
                     line2 += keyNumber;
                     line2 += " menit";
+                    #ifdef USE_OLED
                     oled_clear();
                     oled_header("    Penyiraman  ");
                     oled_font(ArialMT_Plain_16);
@@ -2470,6 +2476,7 @@ void cekKey(char key)
                     oled_print(0, 36, line2);
                     oled_kotak(50, 35, 64, 18);
                     oled_update_display();
+                    #endif
                     // Serial.print(keyNumber);
                     if (keyNumber.length() == 2)
                     {
@@ -2524,9 +2531,10 @@ void cekKey(char key)
 
                             txt1 += String(getDurasiSiram());
                             txt1 += " menit";
+                            #ifdef USE_OLED
 
                             oled_update("   Penyiraman  ", txt1, "00:00  0Ltr", ftr);
-
+                            #endif
                             // setRunMode(SIRAM);
                             menuCount = 0;
                             keyMode = KEY_SET_SIRAM;
@@ -3068,7 +3076,7 @@ void keypad_loop()
             {
                 lastKey = ch;
                 repeatCount = 0;
-                // Serial.println(ch);
+                 Serial.println(ch);
                 cekKey(ch);
             }
             else

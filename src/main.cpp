@@ -38,7 +38,7 @@ Base koneksi ke aktuator dan sensor dengan MySensors
 #define MY_DEFAULT_LED_BLINK_PERIOD 300
 
 //ESP32 CE pada GPIO4
-#define MY_RF24_CE_PIN 4
+#define MY_RF24_CE_PIN 4 
 
 // Inverses the behavior of leds
 // #define MY_WITH_LEDS_BLINKING_INVERSE
@@ -50,7 +50,7 @@ Base koneksi ke aktuator dan sensor dengan MySensors
 // #define MY_DEFAULT_TX_LED_PIN  5  // the PCB, on board LED
 
 #define SLEEP_PIN GPIO_NUM_15
-#define USE_OLED
+//#define USE_OLED
 
 //#include "define.h"
 #include <MySensors.h>
@@ -132,7 +132,7 @@ void loop()
     pestisida_loop();
     biopest_loop();
     mqtt_loop();
-    //ota_loop();
+    ota_loop();
     keypad_loop();
     //ble_loop();
     sleep_loop();

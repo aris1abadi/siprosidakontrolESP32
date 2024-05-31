@@ -1,9 +1,9 @@
 
-#define USE_INTERNAL_RTC
+// #define USE_INTERNAL_RTC
+//#define USE_NTP
 
 #ifndef USE_INTERNAL_RTC
 #include <SPI.h>
-
 #include <RTClib.h>
 #else
 #include <ESP32Time.h>
@@ -21,19 +21,20 @@
 #include <lcdHandle.h>
 #include <oledHandle.h>
 #include <eepromHandle.h>
-#include "SSD1306Wire.h"  
+#include "SSD1306Wire.h"
 
-#define USE_OLED
+// #define USE_OLED
 
-#ifndef USE_INTERNAL_RTC
-RTC_DS3231 rtc;
-#else
+#ifdef USE_INTERNAL_RTC
 // ESP32Time rtc;
 // ESP32Time rtc(3600);  // offset in seconds GMT+1
 ESP32Time rtc(0); // GMT+7
+
+#else
+RTC_DS3231 rtc;
 #endif
 
-// #define USE_NTP
+
 
 uint8_t lastMenit = 0;
 uint8_t lastJam = 0;
@@ -47,13 +48,14 @@ uint8_t updateSync_count = 0;
 #ifndef USE_INTERNAL_RTC
 DateTime now;
 #endif
+
 String timeNow = "";
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 25200, 60000);
 
 char daysOfTheWeek[7][12] = {"Minggu", "Senin", "Selasa", "Rabo", "Kamis", "Jumat", "Sabtu"};
-char bulan[12][12] = {"Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","Nopember","Desember"};
+char bulan[12][12] = {"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "Nopember", "Desember"};
 void ntp_init()
 {
   timeClient.begin();
@@ -66,7 +68,11 @@ void ntp_sync()
   // cek update tiap 10 menit
   unsigned long unix_epoch = timeClient.getEpochTime(); // Get epoch time
   Serial.println("Sync Time");
+#ifdef USE_INTERNAL_RTC
   rtc.setTime(unix_epoch); // Set RTC time using NTP epoch time
+#else
+  rtc.adjust(unix_epoch);
+#endif
 }
 void time_init()
 {
@@ -152,12 +158,12 @@ void displayWaktu()
   timeDisplay2 += rtc.getSecond();
 #else
   timeDisplay1 = daysOfTheWeek[now.dayOfTheWeek()];
-  timeDisplay1 += ",";
-  timeDisplay1 += now.getDay();
+  timeDisplay1 += ", ";
+  timeDisplay1 += now.day();
   timeDisplay1 += "-";
-  timeDisplay1 += now.getMonth();
+  timeDisplay1 += now.month();
   timeDisplay1 += "-";
-  timeDisplay1 += now.getYear();
+  timeDisplay1 += now.year();
 
   if (now.hour() < 10)
   {
@@ -179,14 +185,13 @@ void displayWaktu()
   timeDisplay2 += now.second();
 #endif
 
-  // wk += ",    ";
-  #ifdef USE_OLED
-  oled_stanby_mode(timeDisplay1,timeDisplay2);
-  #else
+// wk += ",    ";
+#ifdef USE_OLED
+  oled_stanby_mode(timeDisplay1, timeDisplay2);
+#else
   lcd_print(0, 1, timeDisplay1);
   lcd_print(8, 1, timeDisplay2);
-  #endif
-  
+#endif
 }
 void time_update()
 {
