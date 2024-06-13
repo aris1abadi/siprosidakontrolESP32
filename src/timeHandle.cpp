@@ -19,9 +19,9 @@
 
 #include <mqttHandle.h>
 #include <lcdHandle.h>
-#include <oledHandle.h>
+//#include <oledHandle.h>
 #include <eepromHandle.h>
-#include "SSD1306Wire.h"
+//#include "SSD1306Wire.h"
 
 // #define USE_OLED
 
@@ -158,7 +158,7 @@ void displayWaktu()
   timeDisplay2 += rtc.getSecond();
 #else
   timeDisplay1 = daysOfTheWeek[now.dayOfTheWeek()];
-  timeDisplay1 += ", ";
+  timeDisplay1 += ",  ";
   timeDisplay1 += now.day();
   timeDisplay1 += "-";
   timeDisplay1 += now.month();

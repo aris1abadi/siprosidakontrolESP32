@@ -1,5 +1,9 @@
 /*
 Base koneksi ke aktuator dan sensor dengan MySensors
+
+=> NRF cahnel 120
+=> broker "mqtt.eclipseprojects.io" port 1883
+
 */
 
 // Enable and select radio type attached
@@ -63,11 +67,7 @@ Base koneksi ke aktuator dan sensor dengan MySensors
 #include <biopestHandle.h>
 #include <otaHandle.h>
 #include <bleHandle.h>
-#ifdef USE_OLED
-#include <oledHandle.h>
-#else
 #include <lcdHandle.h>
-#endif
 #include <keypadHandle.h>
 
 
@@ -96,15 +96,11 @@ void sleep_loop(){
 void before()
 {
     //getID();
-    esp_sleep_enable_ext0_wakeup(SLEEP_PIN,1); //1 = High, 0 = Low
+    //esp_sleep_enable_ext0_wakeup(SLEEP_PIN,1); //1 = High, 0 = Low
     time_init();
-    mqtt_init();
-    
-    #ifdef USE_OLED
-    oled_init();
-    #else
-    lcd_init();
-    #endif
+    mqtt_init();   
+   
+    lcd_init();    
     keypad_init();
     
    
@@ -114,7 +110,7 @@ void setup()
 {
    loadDefault();   
    aktuator_off_semua();
-   //ble_init();
+   ble_init();
    //Serial.println(getID());  
 
 }
@@ -132,8 +128,8 @@ void loop()
     pestisida_loop();
     biopest_loop();
     mqtt_loop();
-    ota_loop();
+    //ota_loop();
     keypad_loop();
-    //ble_loop();
-    sleep_loop();
+    ble_loop();
+    //sleep_loop();
 }

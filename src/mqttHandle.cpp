@@ -946,7 +946,7 @@ void onMqttConnect(bool sessionPresent)
   mqttClient.publish(subTxt.c_str(), 0, true, k_id.c_str());
   Serial.println("Publishing at QoS 0");
   // ota online init
-  ota_init();
+  //ota_init();
   #ifdef USE_LOCAL_OTA
   localOta_init();
   #endif

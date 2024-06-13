@@ -6,8 +6,7 @@
 #include <biopestHandle.h>
 #include <mqttHandle.h>
 #include <mySensorsHandle.h>
-#include <oledHandle.h>
-#include <SSD1306Wire.h>
+//#include <SSD1306Wire.h>
 
 //#define USE_OLED
 
