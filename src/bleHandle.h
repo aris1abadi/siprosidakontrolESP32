@@ -3,6 +3,7 @@
 
 void ble_init();
 void ble_loop();
+void kirim_ble(String bleData);
 
 
 #endif

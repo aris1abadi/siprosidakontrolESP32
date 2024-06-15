@@ -4,6 +4,12 @@
 void eeprom_init();
 void loadDurasiSiram();
 
+void simpanWIFI(String ssid,String pass);
+void loadWIFI();
+
+void loadBroker();
+void simpanBroker(String broker,String pass);
+
 void simpanDurasiSiram(uint8_t dur);
 uint8_t getDurasiSiram();
 

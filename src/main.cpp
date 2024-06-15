@@ -95,6 +95,8 @@ void sleep_loop(){
 
 void before()
 {
+    loadDefault();   
+    delay(2000);
     //getID();
     //esp_sleep_enable_ext0_wakeup(SLEEP_PIN,1); //1 = High, 0 = Low
     time_init();
@@ -108,7 +110,7 @@ void before()
 
 void setup()
 {
-   loadDefault();   
+   
    aktuator_off_semua();
    ble_init();
    //Serial.println(getID());  

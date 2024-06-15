@@ -42,6 +42,7 @@ format pesan
 #include <mySensorsHandle.h>
 #include <otaHandle.h>
 #include <timeHandle.h>
+#include <bleHandle.h>
 
 // #define MQTT_DEBUG
 #define RECONECT_WIFI_TIME 10 // detik
@@ -378,6 +379,23 @@ void cekMqttMsg(String mqTopic, String mqMsg)
     {
       Serial.print("save password: ");
       Serial.println(mqMsg);
+    }
+    else if(mqCmd == "setupWifi"){
+      //format ssid~pass
+      String set_ssid = getValue(mqMsg,'~',0);
+      String set_pass = getValue(mqMsg,'~',1);
+      simpanWIFI(set_ssid,set_pass);
+      Serial.println("Reboot kontroller");
+      rebootTimer.once_ms(3000, rebootNow);
+      
+
+    }else if(mqCmd == "setupBroker"){
+      //format broker~port
+      String set_broker = getValue(mqMsg,'~',0);
+      String set_broker_port = getValue(mqMsg,'~',1);
+      simpanBroker(set_broker,set_broker_port);
+      Serial.println("Reboot kontroller");
+      rebootTimer.once_ms(3000, rebootNow);
     }
   }
   else if (devType == "pompa")
@@ -964,6 +982,11 @@ void kirimKeApp(String type, uint8_t nomer, String cmd, String msg)
   topic_id += "/";
   topic_id += cmd;
   mqttClient.publish(topic_id.c_str(), 0, true, msg.c_str());
+  String ble_msg = topic_id;
+  ble_msg += ';';
+  ble_msg += msg;
+  ble_msg += ";\n";
+  kirim_ble(ble_msg);
 }
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {

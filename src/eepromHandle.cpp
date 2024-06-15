@@ -21,18 +21,22 @@
 #define EE_KALIBRASI_BIOPEST 717
 #define EE_KALIBRASI_AIR_BIOPEST 717
 
-#define EE_WIFI_SSID    720 //32 char
-#define EE_WIFI_PASS    752 //32 char
+#define EE_WIFI_STATUS 719//status penyimpanan
+#define EE_WIFI_SSID 720 // 32 char
+#define EE_WIFI_PASS 752 // 32 char
 
-#define EE_USER_NAME1   784 //16 char
-#define EE_USER_PASS1   800
+#define EE_USER_NAME1 784 // 16 char
+#define EE_USER_PASS1 800
 
-#define EE_USER_NAME2   816//16 char
-#define EE_USER_PASS2   832
+#define EE_USER_NAME2 816 // 16 char
+#define EE_USER_PASS2 832
 
-#define EE_USER_NAME3   848 //16 char
-#define EE_USER_PASS3   864
+#define EE_USER_NAME3 848 // 16 char
+#define EE_USER_PASS3 864
 
+#define EE_BROKER_STATUS 869
+#define EE_BROKER_URL 870  // 30 char
+#define EE_BROKER_PORT 900 // 6 char
 
 #define EE_JADWAL_SIRAM 1000
 #define EE_JADWAL_PESTISIDA 1250
@@ -73,7 +77,7 @@ uint8_t jadwalBiopest3[19] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 uint8_t jadwalBiopest4[19] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t jadwalBiopest5[19] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-String userName0 ="abadinet";
+String userName0 = "abadinet";
 String password_user0 = "001122";
 
 /*
@@ -1367,6 +1371,69 @@ void loadDefault()
 //     EEPROM.begin(EEPROM_SIZE);
 //     loadDefault();
 // }
+void simpanWIFI(String ssid,String pass)
+{
+    writeString(EE_WIFI_SSID, ssid);
+    writeString(EE_WIFI_PASS, pass);
+    Serial.print("Simpan Wifi SSID: ");
+    Serial.print(ssid);
+    Serial.print(" password: ");
+    Serial.println(pass);
+}
+
+
+void loadWIFI()
+{
+    uint8_t sts = EEPROM.read(EE_WIFI_STATUS);
+    if(sts != 0xAA){
+        EEPROM.write(EE_WIFI_STATUS,0xAA);
+        EEPROM.commit();
+        writeString(EE_WIFI_SSID,"siprosida");
+        writeString(EE_WIFI_SSID,"balingtan123");
+        ssid = "siprosida";
+        pass = "balingtan123";
+        Serial.println("Use default wifi");
+
+    } else{
+        ssid = readString(EE_WIFI_SSID);
+        pass = readString(EE_WIFI_PASS);
+        Serial.print("Wifi SSID: ");
+        Serial.print(ssid);
+        Serial.print(" password: ");
+        Serial.println(pass);
+    }
+    
+}
+
+void loadBroker(){
+    uint8_t sts = EEPROM.read(EE_BROKER_STATUS);
+    if(sts != 0xAA){
+        EEPROM.write(EE_BROKER_STATUS,0xAA);
+        EEPROM.commit();
+        writeString(EE_BROKER_URL,"mqtt.eclipseprojects.io");
+        writeString(EE_BROKER_PORT,"1883");
+        mqtt_host = "mqtt.eclipseprojects.io";
+        mqtt_port = 1883;
+        Serial.println("Use default broker");
+
+    } else{
+        mqtt_host = readString(EE_BROKER_URL);
+        mqtt_port = readString(EE_BROKER_PORT).toInt();
+        Serial.print("Broker: ");
+        Serial.print(mqtt_host);
+        Serial.print(" port: ");
+        Serial.println(String(mqtt_port));
+    }
+    
+}
+void simpanBroker(String broker,String pass){
+    writeString(EE_WIFI_SSID, broker);
+    writeString(EE_WIFI_PASS, pass);
+    Serial.print("Simpan broker: ");
+    Serial.print(broker);
+    Serial.print(" password: ");
+    Serial.println(pass);
+}
 
 void loadDurasiSiram()
 {
@@ -1508,26 +1575,26 @@ void loadJadwalSiram()
     if (e_code == 0xAA)
     {
         String jw = readString(EE_JADWAL_SIRAM + 1);
-        //String jw = jadwalDefault;
+        // String jw = jadwalDefault;
         Serial.println("------Jadwal Siram -------");
         Serial.println(jw);
         Serial.println("---------------------------");
-        //Serial.print("Jadwal Siram len: ");
-        //Serial.println(jw.length());
+        // Serial.print("Jadwal Siram len: ");
+        // Serial.println(jw.length());
         jadwalSiram = jw;
-        decodeJadwal(jw, jadwalSiram1, jadwalSiram2, jadwalSiram3,jadwalSiram4,jadwalSiram5);
+        decodeJadwal(jw, jadwalSiram1, jadwalSiram2, jadwalSiram3, jadwalSiram4, jadwalSiram5);
         // cek jadwal
-        //String jm = String(jadwalSiram1[3]);
-        //jm += ':';
-        //jm += String(jadwalSiram1[4]);
+        // String jm = String(jadwalSiram1[3]);
+        // jm += ':';
+        // jm += String(jadwalSiram1[4]);
 
         // Serial.print("jam jadwal1: ");
         // Serial.println(jm);
     }
     else
     {
-        Serial.println("Jadwal Siram masih kosong,Isi default jadwal");     
-        jadwalSiram = jadwalDefault;   
+        Serial.println("Jadwal Siram masih kosong,Isi default jadwal");
+        jadwalSiram = jadwalDefault;
         simpanJadwalSiram(jadwalDefault);
     }
 }
@@ -1538,7 +1605,7 @@ void simpanJadwalSiram(String jadwal)
     writeString(EE_JADWAL_SIRAM + 1, jadwal);
     //
     jadwalSiram = jadwal;
-    decodeJadwal(jadwal, jadwalSiram1, jadwalSiram2, jadwalSiram3,jadwalSiram4,jadwalSiram5);
+    decodeJadwal(jadwal, jadwalSiram1, jadwalSiram2, jadwalSiram3, jadwalSiram4, jadwalSiram5);
 }
 void loadJadwalPestisida()
 {
@@ -1561,7 +1628,7 @@ void loadJadwalPestisida()
     }
     else
     {
-        Serial.println("Jadwal Pestisida masih kosong,simpan default jadwal");        
+        Serial.println("Jadwal Pestisida masih kosong,simpan default jadwal");
         simpanJadwalPestisida(jadwalDefault);
     }
 }
@@ -1725,35 +1792,43 @@ void loadDosisAirBiopest()
     }
 }
 
-void setKalibrasi_pestisida(uint8_t kal){
-    kalibrasiPestisida = kal;    
+void setKalibrasi_pestisida(uint8_t kal)
+{
+    kalibrasiPestisida = kal;
 }
 
-uint8_t getKalibrasi_pestisida(){
+uint8_t getKalibrasi_pestisida()
+{
     return kalibrasiPestisida;
 }
 
-void setKalibrasi_air_pestisida(uint8_t kal){
-    kalibrasiAirPestisida = kal;    
+void setKalibrasi_air_pestisida(uint8_t kal)
+{
+    kalibrasiAirPestisida = kal;
 }
 
-uint8_t getKalibrasi_air_pestisida(){
+uint8_t getKalibrasi_air_pestisida()
+{
     return kalibrasiAirPestisida;
 }
 
-void setKalibrasi_biopest(uint8_t kal){
-    kalibrasiBiopest = kal;    
+void setKalibrasi_biopest(uint8_t kal)
+{
+    kalibrasiBiopest = kal;
 }
 
-uint8_t getKalibrasi_biopest(){
+uint8_t getKalibrasi_biopest()
+{
     return kalibrasiBiopest;
 }
 
-void setKalibrasi_air_biopest(uint8_t kal){
-    kalibrasiAirBiopest = kal;    
+void setKalibrasi_air_biopest(uint8_t kal)
+{
+    kalibrasiAirBiopest = kal;
 }
 
-uint8_t getKalibrasi_air_biopest(){
+uint8_t getKalibrasi_air_biopest()
+{
     return kalibrasiAirBiopest;
 }
 
